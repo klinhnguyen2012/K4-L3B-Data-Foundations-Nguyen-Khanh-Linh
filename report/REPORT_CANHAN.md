@@ -1,6 +1,6 @@
 # Báo Cáo Cá Nhân — Lab 7: Embedding & Vector Store
 
-**Họ tên:** [Tên sinh viên]
+**Họ tên:** Nguyễn Khánh Linh
 **Nhóm:** [Tên nhóm]
 **Ngày:** [Ngày nộp]
 
@@ -15,29 +15,29 @@
 ### Độ tương tự Cosine (Cosine Similarity) (Bài tập 1.1)
 
 **Độ tương tự cosine cao (High cosine similarity) nghĩa là gì?**
-> *Viết 1-2 câu:*
+> Hai vector embedding có hướng gần giống nhau, nghĩa là hai đoạn văn bản có nội dung hoặc ý nghĩa gần nhau. Giá trị càng gần 1 thì mức độ tương đồng càng cao.
 
 **Ví dụ có độ tương tự CAO:**
-- Câu A:
-- Câu B:
-- Tại sao tương đồng:
+- Câu A: Người mua có thể yêu cầu hoàn tiền nếu sản phẩm bị lỗi.
+- Câu B: Khách hàng được hoàn tiền khi nhận được hàng bị lỗi.
+- Tại sao tương đồng: Hai câu dùng từ khác nhau nhưng cùng diễn đạt điều kiện được hoàn tiền do sản phẩm bị lỗi.
 
 **Ví dụ có độ tương tự THẤP:**
-- Câu A:
-- Câu B:
-- Tại sao khác:
+- Câu A: Người mua có thể yêu cầu đổi trả sản phẩm trong thời hạn quy định.
+- Câu B: Hệ thống cần sao lưu dữ liệu trước khi cập nhật phần mềm.
+- Tại sao khác: Hai câu nói về hai chủ đề khác nhau là chính sách đổi trả và bảo trì phần mềm.
 
 **Tại sao độ tương tự cosine (cosine similarity) được ưu tiên hơn khoảng cách Euclid (Euclidean distance) cho text embeddings?**
-> *Viết 1-2 câu:*
+> Cosine similarity tập trung vào hướng của vector, tức là sự tương đồng về ý nghĩa, và ít bị ảnh hưởng bởi độ dài văn bản hơn. Hai đoạn có cùng nội dung nhưng một đoạn dài hơn vẫn có thể có cosine similarity cao.
 
 ### Bài toán tính toán Chunking (Bài tập 1.2)
 
 **Tài liệu 10,000 ký tự, chunk_size=500, overlap=50. Bao nhiêu chunks?**
-> *Trình bày phép tính:*
-> *Đáp án:*
+> *Trình bày phép tính:* `ceil((10000 - 50) / (500 - 50)) = ceil(9950 / 450) = ceil(22.11) = 23`.
+> *Đáp án:* 23 chunks.
 
 **Nếu độ chồng chéo (overlap) tăng lên 100, số lượng chunk thay đổi thế nào? Tại sao muốn độ chồng chéo nhiều hơn?**
-> *Viết 1-2 câu:*
+> Khi `overlap=100`, số chunk là `ceil((10000 - 100) / (500 - 100)) = ceil(9900 / 400) = 25` chunks. Overlap lớn hơn giúp giữ lại ngữ cảnh nằm ở ranh giới giữa hai chunk, nhưng làm tăng số chunk và chi phí lưu trữ/embedding.
 
 ---
 

@@ -11,9 +11,11 @@ from src.embeddings import (
     EMBEDDING_PROVIDER_ENV,
     GEMINI_EMBEDDING_MODEL,
     LOCAL_EMBEDDING_MODEL,
+    NVIDIA_EMBEDDING_MODEL,
     OPENAI_EMBEDDING_MODEL,
     GeminiEmbedder,
     LocalEmbedder,
+    NvidiaEmbedder,
     OpenAIEmbedder,
     _mock_embed,
 )
@@ -86,6 +88,7 @@ def run_manual_demo(question: str | None = None, sample_files: list[str] | None 
         print(f"  - {doc.id}: {doc.metadata['source']}")
 
     load_dotenv(override=False)
+    load_dotenv(dotenv_path=Path(".env.nvidia"), override=False)
     provider = os.getenv(EMBEDDING_PROVIDER_ENV, "mock").strip().lower()
     if provider == "local":
         try:
@@ -102,6 +105,10 @@ def run_manual_demo(question: str | None = None, sample_files: list[str] | None 
             embedder = GeminiEmbedder(model_name=os.getenv("GEMINI_EMBEDDING_MODEL", GEMINI_EMBEDDING_MODEL))
         except Exception:
             embedder = _mock_embed
+    elif provider == "nvidia":
+        embedder = NvidiaEmbedder(
+            model_name=os.getenv("NVIDIA_EMBEDDING_MODEL", NVIDIA_EMBEDDING_MODEL)
+        )
     else:
         embedder = _mock_embed
 

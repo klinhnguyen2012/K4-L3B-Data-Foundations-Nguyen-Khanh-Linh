@@ -9,6 +9,8 @@ import os
 LOCAL_EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 OPENAI_EMBEDDING_MODEL = "text-embedding-3-small"
 GEMINI_EMBEDDING_MODEL = "gemini-embedding-001"
+NVIDIA_EMBEDDING_MODEL = "nvidia/nemotron-3-embed-1b"
+NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1"
 EMBEDDING_PROVIDER_ENV = "EMBEDDING_PROVIDER"
 
 
@@ -82,6 +84,43 @@ class GeminiEmbedder:
     def __call__(self, text: str) -> list[float]:
         response = self.client.models.embed_content(model=self.model_name, contents=text)
         return [float(value) for value in response.embeddings[0].values]
+
+
+class NvidiaEmbedder:
+    """NVIDIA API Catalog embedding backend using its OpenAI-compatible API."""
+
+    def __init__(
+        self,
+        model_name: str = NVIDIA_EMBEDDING_MODEL,
+        api_key: str | None = None,
+        base_url: str | None = None,
+        client=None,
+    ) -> None:
+        self.model_name = model_name
+        self._backend_name = model_name
+        self.client = client
+
+        if self.client is not None:
+            return
+
+        from openai import OpenAI
+
+        resolved_api_key = api_key or os.getenv("NVIDIA_API_KEY")
+        if not resolved_api_key:
+            raise RuntimeError("NVIDIA_API_KEY is required for NvidiaEmbedder")
+
+        self.client = OpenAI(
+            base_url=base_url or os.getenv("NVIDIA_BASE_URL", NVIDIA_BASE_URL),
+            api_key=resolved_api_key,
+        )
+
+    def __call__(self, text: str) -> list[float]:
+        response = self.client.embeddings.create(
+            model=self.model_name,
+            input=text,
+            encoding_format="float",
+        )
+        return [float(value) for value in response.data[0].embedding]
 
 
 _mock_embed = MockEmbedder()

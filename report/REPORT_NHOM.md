@@ -14,31 +14,38 @@
 
 ### Chủ đề (Domain) & Lý Do Chọn
 
-**Chủ đề:** [ví dụ: Customer support FAQ, Luật Việt Nam, công thức nấu ăn, ...]
+**Chủ đề:** Chính sách bảo hành dành cho người mua và người bán trên sàn thương mại điện tử.
 
 **Tại sao nhóm chọn chủ đề này?**
-> *Viết 2-3 câu:*
+> Chính sách bảo hành có các điều kiện, thời hạn và quy trình cụ thể nên phù hợp để đánh giá khả năng truy xuất thông tin chính xác. Corpus gồm quy định cho cả người mua và người bán, vì vậy nhóm có thể kiểm chứng giá trị của metadata filter `audience` khi hai đối tượng có cùng chủ đề nhưng câu trả lời khác nhau.
 
 ### Danh sách tài liệu (Data Inventory)
 
 | # | Tên tài liệu | Nguồn (Source URL) | Ngày lấy / Phiên bản | Số ký tự | Metadata đã gán |
 |---|--------------|------------|--------------------|----------|-----------------|
-| 1 | | | | | |
-| 2 | | | | | |
-| 3 | | | | | |
-| 4 | | | | | |
-| 5 | | | | | |
+| 1 | Chính sách bảo hành cho sản phẩm mua tại Shopee | https://help.shopee.vn/4/article/79046-[Quy-định]-Chính-sách-bảo-hành-cho-sản-phẩm-mua-tại-Shopee | 2026-09-20 / not-stated | 2,899 | `doc_id`, `audience=buyer`, `category`, `language`, `platform` |
+| 2 | FAQ xử lý bảo hành dành cho Nhà Bán (Tiki) | https://hocvien.tiki.vn/faq/cau-hoi-thuong-gap-ve-xu-ly-doi-tra-bao-hanh/ | 2026-09-20 / not-stated | 3,306 | `doc_id`, `audience=seller`, `category`, `language`, `platform` |
+| 3 | Hướng dẫn bảo hành mô hình FBT (Tiki) | https://hocvien.tiki.vn/faq/mo-hinh-fbt-huong-dan-quy-trinh-xu-ly-doi-tra-bao-hanh/ | 2026-09-20 / not-stated | 1,643 | `doc_id`, `audience=seller`, `category`, `language`, `platform`, `fulfillment_model=fbt` |
+| 4 | Hướng dẫn bảo hành mô hình Dropship (Tiki) | https://hocvien.tiki.vn/faq/huong-dan-quy-trinh-xu-ly-doi-tra-bao-hanh-mo-hinh-dropship/ | 2026-09-20 / not-stated | 2,246 | `doc_id`, `audience=seller`, `category`, `language`, `platform`, `fulfillment_model=dropship` |
+| 5 | Hướng dẫn bảo hành mô hình SD (Tiki) | https://hocvien.tiki.vn/faq/huong-dan-quy-trinh-xu-ly-doi-tra-bao-hanh-mo-hinh-sd/ | 2026-09-20 / not-stated | 2,031 | `doc_id`, `audience=seller`, `category`, `language`, `platform`, `fulfillment_model=sd` |
 
 **Danh sách kiểm tra quản trị dữ liệu (Data governance checklist):**
-- [ ] Tập tài liệu (Corpus) chỉ chứa nguồn công khai/được phép dùng và không chứa dữ liệu cá nhân, thông tin đăng nhập hoặc tài liệu nội bộ.
-- [ ] Mỗi tài liệu có `source_url`, `retrieved_at`, `document_version` (hoặc ngày hiệu lực) trong metadata.
+- [x] Tập tài liệu (Corpus) chỉ chứa nguồn công khai/được phép dùng và không chứa dữ liệu cá nhân, thông tin đăng nhập hoặc tài liệu nội bộ.
+- [x] Mỗi tài liệu có `source_url`, `retrieved_at`, `document_version` (hoặc ngày hiệu lực) trong metadata.
 
 ### Cấu trúc Metadata (Metadata Schema)
 
 | Trường metadata | Kiểu | Ví dụ giá trị | Tại sao hữu ích cho truy xuất (retrieval)? |
 |----------------|------|---------------|-------------------------------|
-| | | | |
-| | | | |
+| `doc_id` | string | `warranty-seller-fbt-tiki` | Liên kết mọi chunk với tài liệu nguồn; cần cho `delete_document()`. |
+| `audience` | enum | `buyer`, `seller` | Lọc đúng quy định theo đối tượng, tránh trả lời quy định của người bán cho người mua. |
+| `category` | string | `warranty-policy` | Giới hạn truy xuất theo chủ đề chính sách khi corpus mở rộng. |
+| `platform` | string | `shopee`, `tiki` | Phân biệt chính sách của từng sàn thương mại điện tử. |
+| `fulfillment_model` | string (optional) | `fbt`, `dropship`, `sd` | Phân biệt các quy trình bảo hành khác nhau dành cho Nhà Bán Tiki. |
+| `language` | string | `vi` | Hỗ trợ phân loại hoặc lọc theo ngôn ngữ khi thêm tài liệu đa ngữ. |
+| `source_url` | URL string | URL trang chính sách gốc | Giúp truy vết và kiểm chứng câu trả lời. |
+| `retrieved_at` | date string | `2026-09-20` | Cho biết độ mới của dữ liệu đã thu thập. |
+| `document_version` | string | `not-stated` | Lưu phiên bản/ngày hiệu lực khi nguồn cung cấp; không bịa phiên bản nếu nguồn không nêu. |
 
 ---
 
