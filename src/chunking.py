@@ -129,6 +129,71 @@ class RecursiveChunker:
         return merged
 
 
+class HeadingSectionChunker:
+    """Split Markdown policy text by headings while retaining heading context."""
+
+    HEADING_PATTERN = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
+
+    def __init__(self, chunk_size: int = 500) -> None:
+        self.chunk_size = max(1, chunk_size)
+
+    def chunk(self, text: str) -> list[str]:
+        if not text or not text.strip():
+            return []
+
+        chunks: list[str] = []
+        for headings, body in self._sections(text):
+            prefix = "\n".join(headings)
+            section = f"{prefix}\n{body}".strip() if prefix else body
+            if len(section) <= self.chunk_size:
+                chunks.append(section)
+                continue
+
+            max_body_length = self.chunk_size - len(prefix) - 1
+            if max_body_length < 1:
+                chunks.extend(FixedSizeChunker(self.chunk_size, overlap=0).chunk(section))
+                continue
+
+            for body_chunk in RecursiveChunker(chunk_size=max_body_length).chunk(body):
+                chunks.append(f"{prefix}\n{body_chunk}")
+        return chunks
+
+    def _sections(self, text: str) -> list[tuple[list[str], str]]:
+        sections: list[tuple[list[str], str]] = []
+        heading_stack: list[tuple[int, str]] = []
+        current_headings: list[str] = []
+        current_lines: list[str] = []
+        lines = text.strip().splitlines()
+
+        if lines and lines[0].strip() == "---":
+            for index, line in enumerate(lines[1:], start=1):
+                if line.strip() == "---":
+                    lines = lines[index + 1 :]
+                    break
+
+        for line in lines:
+            match = self.HEADING_PATTERN.match(line)
+            if not match:
+                current_lines.append(line)
+                continue
+
+            body = "\n".join(current_lines).strip()
+            if body:
+                sections.append((current_headings, body))
+
+            level = len(match.group(1))
+            while heading_stack and heading_stack[-1][0] >= level:
+                heading_stack.pop()
+            heading_stack.append((level, line.strip()))
+            current_headings = [heading for _, heading in heading_stack]
+            current_lines = []
+
+        body = "\n".join(current_lines).strip()
+        if body:
+            sections.append((current_headings, body))
+        return sections
+
+
 def _dot(a: list[float], b: list[float]) -> float:
     return sum(x * y for x, y in zip(a, b))
 

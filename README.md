@@ -262,3 +262,15 @@ Xem chi tiết tại `docs/SCORING.md`. Tóm tắt:
 ```bash
 pytest tests/ -v
 ```
+
+## Chạy Benchmark Chính Sách (Nhóm Skynet)
+
+Điền `NVIDIA_API_KEY` trong file `.env.nvidia` (file này đã được gitignore), rồi chạy cùng một bộ 5 câu hỏi cho từng chiến lược:
+
+```bash
+.venv/bin/python3.12 benchmark.py --strategy fixed
+.venv/bin/python3.12 benchmark.py --strategy recursive
+.venv/bin/python3.12 benchmark.py --strategy heading
+```
+
+Mỗi lần chạy in top-3 của 5 câu, điểm cosine và trạng thái evidence. Với câu 1, script tự in cả kết quả không filter và kết quả có `metadata_filter={"audience": "buyer"}` để kiểm tra tác dụng của metadata.
