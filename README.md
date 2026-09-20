@@ -265,7 +265,7 @@ pytest tests/ -v
 
 ## Chạy Benchmark Chính Sách (Nhóm Skynet)
 
-Điền `NVIDIA_API_KEY` trong file `.env.nvidia` (file này đã được gitignore), rồi chạy cùng một bộ 5 câu hỏi cho từng chiến lược:
+Điền `NVIDIA_API_KEY` trong file `.env.nvidia` (file này đã được gitignore). Cùng key này được dùng cho NVIDIA embeddings và NVIDIA Chat LLM. Sau đó chạy cùng một bộ 5 câu hỏi cho từng chiến lược:
 
 ```bash
 .venv/bin/python3.12 benchmark.py --strategy fixed
@@ -273,4 +273,4 @@ pytest tests/ -v
 .venv/bin/python3.12 benchmark.py --strategy heading
 ```
 
-Mỗi lần chạy in top-3 của 5 câu, điểm cosine và trạng thái evidence. Với câu 1, script tự in cả kết quả không filter và kết quả có `metadata_filter={"audience": "buyer"}` để kiểm tra tác dụng của metadata.
+Mỗi lần chạy in embedding/LLM model, top-1 chunk và điểm cosine, vị trí gold chunk trong top-3, câu trả lời Agent và điểm của cả 5 câu. Script cũng in kết quả không filter trước kết quả có metadata filter để kiểm tra tác dụng của `audience` và `fulfillment_model`.

@@ -1,164 +1,174 @@
 # Báo Cáo Nhóm — Lab 7: Embedding & Vector Store
 
 **Nhóm:** Skynet
-**Thành viên:** [Họ tên từng thành viên]
-**Ngày:** [Ngày nộp]
 
-> **Nộp 1 bản / nhóm.** Phần cá nhân (hướng tiếp cận, kết quả riêng, dự đoán…) mỗi thành viên nộp riêng trong `REPORT_CANHAN.md`. Chi tiết thang điểm: `docs/SCORING.md`.
+**Thành viên:** Phùng Trọng Chiến (`2A202602430`, thành viên 1); Ngô Lê Thuỳ Tiên (`2A202602614`, thành viên 2); Nguyễn Khánh Linh (`2A202602409`, thành viên 3); Nguyễn Hồng Khoa (`2A202602534`, thành viên 4)
 
-**Tổng điểm phần nhóm: 40** = Lựa chọn tài liệu (10) + Thiết kế chiến lược (15) + Chất lượng truy xuất (10) + Thuyết trình (5).
+**Ngày:** 2026-09-20
 
----
+## 1. Lựa chọn tài liệu (10 điểm)
 
-## 1. Lựa chọn tài liệu (Document Set Quality) — Nhóm (10 điểm)
+### Chủ đề và lý do chọn
 
-### Chủ đề (Domain) & Lý Do Chọn
+**Chủ đề:** Chính sách bảo hành và quy trình xử lý bảo hành trên Shopee và Tiki.
 
-**Chủ đề:** Chính sách bảo hành dành cho người mua và người bán trên sàn thương mại điện tử.
+Chủ đề có cấu trúc phân cấp rõ gồm điều kiện, thời hạn, quy trình và chế tài; đồng thời chứa nhiều mốc SLA cụ thể như 02, 15–30, 32 và 45 ngày. Corpus cũng phân tách rõ `buyer` và `seller`, cùng các mô hình FBT, Dropship và SD, phù hợp để đánh giá cả chunking lẫn metadata filtering.
 
-**Tại sao nhóm chọn chủ đề này?**
-> Chính sách bảo hành có các điều kiện, thời hạn và quy trình cụ thể nên phù hợp để đánh giá khả năng truy xuất thông tin chính xác. Corpus gồm quy định cho cả người mua và người bán, vì vậy nhóm có thể kiểm chứng giá trị của metadata filter `audience` khi hai đối tượng có cùng chủ đề nhưng câu trả lời khác nhau.
+### Data inventory
 
-### Danh sách tài liệu (Data Inventory)
+| # | Tài liệu | Nguồn | Ngày lấy / phiên bản | Số ký tự nội dung | Metadata chính |
+|---|---|---|---|---:|---|
+| 1 | Chính sách bảo hành cho sản phẩm mua tại Shopee | [Shopee Help Center](https://help.shopee.vn/4/article/79046-[Quy-định]-Chính-sách-bảo-hành-cho-sản-phẩm-mua-tại-Shopee) | 2026-09-20 / not-stated | 2.897 | `buyer`, `shopee`, `warranty-policy` |
+| 2 | FAQ xử lý bảo hành dành cho Nhà Bán | [Học viện Tiki](https://hocvien.tiki.vn/faq/cau-hoi-thuong-gap-ve-xu-ly-doi-tra-bao-hanh/) | 2026-09-20 / not-stated | 3.304 | `seller`, `tiki`, `warranty-policy` |
+| 3 | Quy trình bảo hành FBT | [Học viện Tiki](https://hocvien.tiki.vn/faq/mo-hinh-fbt-huong-dan-quy-trinh-xu-ly-doi-tra-bao-hanh/) | 2026-09-20 / not-stated | 1.641 | `seller`, `tiki`, `fbt` |
+| 4 | Quy trình bảo hành Dropship | [Học viện Tiki](https://hocvien.tiki.vn/faq/huong-dan-quy-trinh-xu-ly-doi-tra-bao-hanh-mo-hinh-dropship/) | 2026-09-20 / not-stated | 2.244 | `seller`, `tiki`, `dropship` |
+| 5 | Quy trình bảo hành SD | [Học viện Tiki](https://hocvien.tiki.vn/faq/huong-dan-quy-trinh-xu-ly-doi-tra-bao-hanh-mo-hinh-sd/) | 2026-09-20 / not-stated | 2.029 | `seller`, `tiki`, `sd` |
 
-| # | Tên tài liệu | Nguồn (Source URL) | Ngày lấy / Phiên bản | Số ký tự | Metadata đã gán |
-|---|--------------|------------|--------------------|----------|-----------------|
-| 1 | Chính sách bảo hành cho sản phẩm mua tại Shopee | https://help.shopee.vn/4/article/79046-[Quy-định]-Chính-sách-bảo-hành-cho-sản-phẩm-mua-tại-Shopee | 2026-09-20 / not-stated | 2,899 | `doc_id`, `audience=buyer`, `category`, `language`, `platform` |
-| 2 | FAQ xử lý bảo hành dành cho Nhà Bán (Tiki) | https://hocvien.tiki.vn/faq/cau-hoi-thuong-gap-ve-xu-ly-doi-tra-bao-hanh/ | 2026-09-20 / not-stated | 3,306 | `doc_id`, `audience=seller`, `category`, `language`, `platform` |
-| 3 | Hướng dẫn bảo hành mô hình FBT (Tiki) | https://hocvien.tiki.vn/faq/mo-hinh-fbt-huong-dan-quy-trinh-xu-ly-doi-tra-bao-hanh/ | 2026-09-20 / not-stated | 1,643 | `doc_id`, `audience=seller`, `category`, `language`, `platform`, `fulfillment_model=fbt` |
-| 4 | Hướng dẫn bảo hành mô hình Dropship (Tiki) | https://hocvien.tiki.vn/faq/huong-dan-quy-trinh-xu-ly-doi-tra-bao-hanh-mo-hinh-dropship/ | 2026-09-20 / not-stated | 2,246 | `doc_id`, `audience=seller`, `category`, `language`, `platform`, `fulfillment_model=dropship` |
-| 5 | Hướng dẫn bảo hành mô hình SD (Tiki) | https://hocvien.tiki.vn/faq/huong-dan-quy-trinh-xu-ly-doi-tra-bao-hanh-mo-hinh-sd/ | 2026-09-20 / not-stated | 2,031 | `doc_id`, `audience=seller`, `category`, `language`, `platform`, `fulfillment_model=sd` |
+Corpus nằm tại `data/warranty-policy/`; nguồn được tổng hợp trong `sources.csv`.
 
-**Danh sách kiểm tra quản trị dữ liệu (Data governance checklist):**
-- [x] Tập tài liệu (Corpus) chỉ chứa nguồn công khai/được phép dùng và không chứa dữ liệu cá nhân, thông tin đăng nhập hoặc tài liệu nội bộ.
-- [x] Mỗi tài liệu có `source_url`, `retrieved_at`, `document_version` (hoặc ngày hiệu lực) trong metadata.
+### Data governance
 
-### Cấu trúc Metadata (Metadata Schema)
+- [x] Có 5 tài liệu công khai, không chứa dữ liệu cá nhân hoặc thông tin đăng nhập.
+- [x] Mỗi tài liệu có `source_url`, `retrieved_at`, `document_version`.
+- [x] Mỗi tài liệu có `audience`, `category`, `language`, `platform`.
+- [x] Tài liệu theo mô hình vận hành có thêm `fulfillment_model`.
+- [x] Gold answer đều trích được từ corpus, không suy đoán chính sách.
 
-| Trường metadata | Kiểu | Ví dụ giá trị | Tại sao hữu ích cho truy xuất (retrieval)? |
-|----------------|------|---------------|-------------------------------|
-| `doc_id` | string | `warranty-seller-fbt-tiki` | Liên kết mọi chunk với tài liệu nguồn; cần cho `delete_document()`. |
-| `audience` | enum | `buyer`, `seller` | Lọc đúng quy định theo đối tượng, tránh trả lời quy định của người bán cho người mua. |
-| `category` | string | `warranty-policy` | Giới hạn truy xuất theo chủ đề chính sách khi corpus mở rộng. |
-| `platform` | string | `shopee`, `tiki` | Phân biệt chính sách của từng sàn thương mại điện tử. |
-| `fulfillment_model` | string (optional) | `fbt`, `dropship`, `sd` | Phân biệt các quy trình bảo hành khác nhau dành cho Nhà Bán Tiki. |
-| `language` | string | `vi` | Hỗ trợ phân loại hoặc lọc theo ngôn ngữ khi thêm tài liệu đa ngữ. |
-| `source_url` | URL string | URL trang chính sách gốc | Giúp truy vết và kiểm chứng câu trả lời. |
-| `retrieved_at` | date string | `2026-09-20` | Cho biết độ mới của dữ liệu đã thu thập. |
-| `document_version` | string | `not-stated` | Lưu phiên bản/ngày hiệu lực khi nguồn cung cấp; không bịa phiên bản nếu nguồn không nêu. |
+### Metadata schema
 
----
+| Trường | Kiểu | Ví dụ | Công dụng |
+|---|---|---|---|
+| `doc_id` | string | `warranty-seller-fbt-tiki` | Truy vết, cập nhật và xóa toàn bộ chunk của tài liệu. |
+| `source_url` | string | URL trang chính sách | Kiểm chứng nguồn. |
+| `retrieved_at` | ISO date | `2026-09-20` | Theo dõi độ mới. |
+| `document_version` | string | `not-stated` | Ghi nhận phiên bản/hiệu lực mà nguồn công bố. |
+| `audience` | enum | `buyer`, `seller` | Tránh truy xuất nhầm đối tượng. |
+| `category` | string | `warranty-policy` | Phân loại nghiệp vụ. |
+| `platform` | enum | `shopee`, `tiki` | Giới hạn theo sàn. |
+| `fulfillment_model` | enum | `fbt`, `dropship`, `sd` | Giới hạn đúng quy trình vận hành. |
+| `language` | string | `vi` | Định tuyến theo ngôn ngữ. |
 
-## 2. Thiết kế chiến lược (Strategy Design) — Nhóm (15 điểm)
+## 2. Thiết kế chiến lược (15 điểm)
 
-> Mỗi thành viên thử **một chiến lược khác nhau** trên cùng bộ tài liệu; nhóm tổng hợp và so sánh ở đây.
+### Baseline trên ba tài liệu
 
-### Phân tích đường cơ sở (Baseline Analysis)
+Thông số chung: `chunk_size=500`; Fixed-size baseline dùng `overlap=0` trong comparator.
 
-Chạy `ChunkingStrategyComparator().compare()` trên 2-3 tài liệu:
+| Tài liệu | Chiến lược | Số chunk | Độ dài TB | Nhận xét |
+|---|---|---:|---:|---|
+| Shopee buyer | Fixed-size | 6 | 482,83 | Kích thước đều nhưng có thể cắt giữa câu. |
+| Shopee buyer | Sentence | 9 | 320,00 | Mạch lạc theo câu, đôi lúc mang heading sang chunk khác. |
+| Shopee buyer | Recursive | 8 | 360,38 | Ưu tiên đoạn/dòng/câu nên cân bằng độ dài và ngữ cảnh. |
+| Tiki FAQ | Fixed-size | 7 | 472,00 | Có nguy cơ trộn hai câu hỏi FAQ. |
+| Tiki FAQ | Sentence | 11 | 298,00 | Chunk nhỏ, dễ đọc. |
+| Tiki FAQ | Recursive | 9 | 365,33 | Giữ đoạn tốt hơn fixed-size. |
+| Tiki FBT | Fixed-size | 4 | 410,25 | Ít chunk nhưng có ranh giới cơ học. |
+| Tiki FBT | Sentence | 5 | 326,00 | Giữ câu hoàn chỉnh. |
+| Tiki FBT | Recursive | 4 | 408,75 | Giữ cấu trúc đoạn tương đối tốt. |
 
-| Tài liệu | Chiến lược (Strategy) | Số lượng Chunk | Độ dài trung bình | Giữ được ngữ cảnh không? |
-|-----------|----------|-------------|------------|-------------------|
-| Chính sách bảo hành người mua Shopee | FixedSizeChunker (`fixed_size`) | 8 | 467.1 ký tự | Có ở mức cơ bản; overlap cần thiết tại ranh giới chunk. |
-| Chính sách bảo hành người mua Shopee | SentenceChunker (`by_sentences`) | 9 | 320.0 ký tự | Có; câu không bị cắt giữa chừng nhưng phần điều kiện có thể bị tách khỏi tiêu đề. |
-| Chính sách bảo hành người mua Shopee | RecursiveChunker (`recursive`) | 8 | 360.4 ký tự | Có; ưu tiên đoạn và câu trước khi cắt theo ký tự. |
-| FAQ bảo hành Nhà Bán Tiki | FixedSizeChunker (`fixed_size`) | 9 | 473.8 ký tự | Có ở mức cơ bản; có rủi ro cắt giữa câu hỏi và câu trả lời. |
-| FAQ bảo hành Nhà Bán Tiki | SentenceChunker (`by_sentences`) | 11 | 298.0 ký tự | Có; các câu FAQ được giữ nguyên nhưng chunk ngắn hơn. |
-| FAQ bảo hành Nhà Bán Tiki | RecursiveChunker (`recursive`) | 9 | 365.3 ký tự | Có; phù hợp với cấu trúc đoạn/FAQ của tài liệu. |
-| Hướng dẫn bảo hành Dropship Tiki | FixedSizeChunker (`fixed_size`) | 6 | 474.0 ký tự | Có ở mức cơ bản; cần overlap để giữ bước xử lý liền kề. |
-| Hướng dẫn bảo hành Dropship Tiki | SentenceChunker (`by_sentences`) | 5 | 446.6 ký tự | Có; ít cắt câu nhưng phụ thuộc độ dài câu gốc. |
-| Hướng dẫn bảo hành Dropship Tiki | RecursiveChunker (`recursive`) | 7 | 318.9 ký tự | Có; giữ được cụm hướng dẫn theo đoạn tốt hơn. |
+### Các cấu hình được so sánh
 
-### Chiến lược của từng thành viên
+| Cấu hình | Chiến lược | Tham số | Lý do |
+|---|---|---|---|
+| A | Fixed-size | 500 ký tự, overlap 120 | Baseline có overlap để giảm mất ngữ cảnh ở biên. |
+| B | Recursive | 500 ký tự | Ưu tiên đoạn, dòng, câu rồi từ. |
+| C | Heading custom | Tách heading, recursive nếu section >500 | Khai thác cấu trúc Markdown và đáp ứng yêu cầu chunk theo heading/section. |
+| Thành viên 2 | `HeadingChunker` | Tách nguyên mục theo heading `##`/`###`, không fallback theo kích thước | Giữ mỗi điều khoản gốc thành một đơn vị hoàn chỉnh. |
+| Thành viên 3 | `RecursiveChunker` | 500 ký tự, separator `\n\n`, `\n`, `. `, khoảng trắng, ký tự | Cân bằng ranh giới cấu trúc và kích thước; là lựa chọn mặc định được Nguyễn Khánh Linh kết luận trong báo cáo thử nghiệm. |
 
-> Mỗi thành viên điền một khối dưới đây (copy thêm nếu nhóm có nhiều hơn 3 người).
+`HeadingSectionChunker` được cài trong `src/chunking.py`: regex tìm heading Markdown, giữ chuỗi heading cha trong chunk rồi dùng `RecursiveChunker` làm fallback cho section quá dài.
 
-**Thành viên 1 — Nguyễn Khánh Linh**
-- **Loại chiến lược:** `FixedSizeChunker(chunk_size=500, overlap=120)`.
-- **Mô tả & lý do chọn cho chủ đề này:** Mỗi chunk dài tối đa 500 ký tự và lặp lại 120 ký tự ở chunk kế tiếp. Đây là đường cơ sở rõ ràng, dễ đối chiếu với các chiến lược khác; overlap giúp không mất thông tin khi thời hạn, điều kiện hoặc một bước trong quy trình bảo hành nằm tại ranh giới giữa hai chunk.
-- **Code snippet (nếu custom):** Không dùng custom chunker; dùng lớp `FixedSizeChunker` đã có trong `src/chunking.py`.
-```python
-chunker = FixedSizeChunker(chunk_size=500, overlap=120)
-```
+### Kết quả benchmark đã chạy trong repo của Nguyễn Khánh Linh
 
-**Thành viên 2 — [Bổ sung họ tên]**
-- **Loại chiến lược:** `RecursiveChunker(chunk_size=500)`.
-- **Mô tả & lý do chọn:** Ưu tiên ngắt theo đoạn trống, xuống dòng, câu rồi mới đến khoảng trắng. Cách này phù hợp để giữ một bước xử lý hoặc một cụm FAQ trong cùng chunk, đồng thời vẫn kiểm soát độ dài khi một mục chính sách quá dài.
-- **Code snippet (nếu custom):** Không dùng custom chunker.
+Backend retrieval dùng NVIDIA API với embedding model `nvidia/nemotron-3-embed-1b`. Agent dùng NVIDIA Chat model `openai/gpt-oss-20b`, chỉ trả lời từ top-3 context và được yêu cầu trích số nguồn. Cách chấm: 2 điểm khi gold chunk ở top-1 và Agent đúng; 1 điểm khi gold chunk ở top-2/top-3 và Agent đúng; 0 điểm khi gold chunk không nằm trong top-3.
 
-**Thành viên 3 — [Bổ sung họ tên]**
-- **Loại chiến lược:** Custom heading/section-aware chunker.
-- **Mô tả & lý do chọn:** Tài liệu chính sách có tiêu đề, mục và FAQ rõ ràng, nên mỗi chunk cần mang theo tiêu đề/mục gốc để không tách câu trả lời khỏi phạm vi áp dụng. Mỗi mục dài có thể chia tiếp bằng `RecursiveChunker`, nhưng các chunk con vẫn phải giữ tiêu đề của mục đó.
-- **Code snippet (nếu custom):** Đã triển khai `HeadingSectionChunker` trong `src/chunking.py`; chunker bỏ YAML front matter, nhận diện Markdown heading và lặp heading khi mục quá dài.
-```python
-chunker = HeadingSectionChunker(chunk_size=500)
-```
+| Chiến lược | Chunk | Độ dài TB | Điểm có filter | Điểm mạnh | Điểm yếu |
+|---|---:|---:|---:|---|---|
+| Fixed-size 500/120 | 34 | 458,68 | 3/10 | Đơn giản, overlap giữ được một phần ngữ cảnh ở biên | Cắt cơ học làm evidence bị chia; Q1, Q4 và Q5 không có gold trong top-3. |
+| Recursive 500 — Nguyễn Khánh Linh | 34 | 354,62 | 4/10 | Q1 và Q5 có gold trong top-3; Q3 đạt top-1 | Q2 và Q4 không có gold trong top-3. |
+| Heading + recursive 500 | 41 | 366,78 | 4/10 | Bám cấu trúc chính sách; Q3 top-1 và Q4 top-3 | Q1 và Q5 không có gold trong top-3. |
 
-### So Sánh Giữa Các Thành Viên
+Hai chiến lược Recursive và Heading cùng đạt 4/10 nhưng thành công ở các query khác nhau. Heading lấy được gold chunk của câu Dropship (Q4), còn Recursive lấy được gold chunk của câu Shopee buyer (Q1) và SD (Q5). Kết quả của các thành viên khác cần được chính các thành viên chạy lại trên đúng năm query này trước khi nhóm chốt bảng so sánh cuối.
 
-| Thành viên | Chiến lược (Strategy) | Điểm truy xuất (/10) | Điểm mạnh | Điểm yếu |
-|-----------|----------|----------------------|-----------|----------|
-| Nguyễn Khánh Linh | Fixed size 500, overlap 120 | 2 / 10 (1/5 có evidence đúng trong top-3) | Độ dài ổn định, giảm mất ngữ cảnh ở ranh giới. | Có thể cắt giữa tiêu đề/câu hỏi và nội dung trả lời. |
-| [Bổ sung họ tên] | Recursive, tối đa 500 ký tự | 4 / 10 (2/5 có evidence đúng trong top-3) | Tôn trọng cấu trúc đoạn và câu của văn bản. | Chunk có thể không đồng đều; câu Dropship và video chưa lấy được evidence. |
-| [Bổ sung họ tên] | Heading/section-aware custom | 4 / 10 (2/5 có evidence đúng trong top-3) | Giữ phạm vi điều khoản và tiêu đề chính sách rõ ràng; lấy đúng top-1 cho câu video. | Mục dài vẫn cần chia nhỏ hơn để truy xuất đủ danh sách SD và mốc thời gian Shopee/Dropship. |
+### Thành viên 2 — Ngô Lê Thuỳ Tiên (`2A202602614`)
 
-**Chiến lược nào tốt nhất cho chủ đề này? Tại sao?**
-> Không có một chiến lược thắng tuyệt đối trong lần chạy này: RecursiveChunker và heading/section-aware cùng có 2/5 câu chứa evidence đúng trong top-3 (4/10 theo thang retrieval). RecursiveChunker là lựa chọn tốt nhất cho câu thời hạn có filter `audience=buyer`, còn heading/section-aware lấy đúng FAQ video ở top-1; kết quả cho thấy cần kết hợp chia theo mục với việc tách nhỏ các bước/bullet dài.
+- **Repo:** [K4-DAY07-NgoLeThuyTien-2A202602614](https://github.com/tiennl/K4-DAY07-NgoLeThuyTien-2A202602614)
+- **Chiến lược:** custom `HeadingChunker`, tách theo heading Markdown cấp `##`/`###`.
+- **Lý do:** tài liệu chính sách dùng heading làm ranh giới điều khoản; giữ heading và nội dung trong cùng chunk giúp bảo toàn điều kiện, thời hạn và hậu quả.
+- **Kết quả:** Thành viên 2 tự chạy lại trên năm query thống nhất và điền kết quả trước khi nộp.
 
----
+### Thành viên 3 — Nguyễn Khánh Linh (2A202602409)
 
-## 3. Câu hỏi đánh giá & Chất lượng truy xuất (Retrieval Quality) — Nhóm (10 điểm)
+- **Repo:** [K4-L3B-Data-Foundations-Nguyen-Khanh-Linh](https://github.com/klinhnguyen2012/K4-L3B-Data-Foundations-Nguyen-Khanh-Linh)
+- **Chiến lược:** `RecursiveChunker(chunk_size=500)` với thứ tự separator mặc định: đoạn trống, xuống dòng, dấu chấm, khoảng trắng rồi ký tự.
+- **Lý do:** ưu tiên ranh giới cấu trúc lớn trước, chỉ tách nhỏ hơn khi cần; phù hợp tài liệu chính sách có cả đoạn văn, danh sách và FAQ.
+- **Kết quả chạy thật:** 34 chunk, độ dài trung bình 354,62; đạt 4/10 sau metadata filter bằng `nvidia/nemotron-3-embed-1b` và `openai/gpt-oss-20b`.
 
-### Câu hỏi đánh giá & Câu trả lời chuẩn (nhóm thống nhất)
+## 3. Benchmark queries và retrieval quality (10 điểm)
 
-> **Đúng 5 câu hỏi**, đa dạng, có thể kiểm chứng; **ít nhất 1 câu** cần lọc metadata mới trả lời tốt. Đây là bộ câu hỏi chung cho mọi thành viên chạy.
+### Bộ câu hỏi và gold answer
 
-| # | Câu hỏi (Query) | Câu trả lời chuẩn (Gold Answer) | Chunk nào chứa thông tin? |
-|---|-------|-------------------------------|--------------------------|
-| 1 | Thời gian bảo hành là bao lâu? *(bắt buộc chạy với `metadata_filter={"audience": "buyer"}` để xác định chính sách cho Người Mua)* | Khoảng 20–45 ngày làm việc kể từ khi Shopee nhận được sản phẩm. | `warranty-buyer-shopee` — mục **4. Thời gian bảo hành**, ý b. |
-| 2 | Trong mô hình FBT, nếu hàng lỗi không đủ điều kiện nhập kho, Nhà Bán có bao lâu để rút hàng? | 32 ngày làm việc kể từ lúc phiếu trả hàng được tạo. | `warranty-seller-fbt-tiki` — mục **II. Quy trình xử lý bảo hành**, bước 1–2. |
-| 3 | Theo mô hình Dropship, khi từ chối xử lý bảo hành, Nhà Bán phải cung cấp bằng chứng trong bao lâu? | Trong vòng 2 ngày làm việc kể từ khi nhận yêu cầu hoàn tiền hoặc nhận sản phẩm từ đơn vị vận chuyển. | `warranty-seller-dropship-tiki` — mục **I. Quy định chung**. |
-| 4 | Nhà Bán cần lưu video đóng gói hàng hóa tối thiểu bao lâu? | 45 ngày: 30 ngày sau khi giao thành công cộng thời gian giao/thu hồi hàng. | `warranty-seller-general-tiki` — **Câu hỏi 11**. |
-| 5 | Theo mô hình SD, Tiki có thể xử lý những phương án nào sau khi có kết quả xác minh? | Hoàn tiền, đổi sản phẩm, bảo hành hoặc từ chối trả hàng, tùy trường hợp. | `warranty-seller-sd-tiki` — mục **II. Quy trình xử lý bảo hành**. |
+| # | Query | Gold answer | Chunk nguồn |
+|---|---|---|---|
+| 1 | Người mua cần chuẩn bị giấy tờ gì để được bảo hành miễn phí trên Shopee? | Có hóa đơn điện tử hoặc mã đơn hàng; đối với đồ điện gia dụng cần phiếu/tem bảo hành còn nguyên vẹn. | `warranty-buyer-shopee`, mục “Điều kiện bảo hành” |
+| 2 | Nhà Bán Tiki không xác nhận phương án xử lý trong 02 ngày làm việc thì sao? | Tiki có thể xử lý theo yêu cầu khách hàng và từ chối tiếp nhận khiếu nại của Nhà Bán phát sinh sau thời hạn. | `warranty-seller-general-tiki`, Câu 4 |
+| 3 | Trong mô hình FBT, Nhà Bán phải rút hàng lỗi không đủ điều kiện nhập kho trong bao lâu? | Nhà Bán phải sắp xếp rút hàng trong 32 ngày làm việc kể từ khi phiếu trả hàng được tạo. | `warranty-seller-fbt-tiki`, Bước 1–2 |
+| 4 | Ở mô hình Dropship, nếu Nhà Bán từ chối xử lý đổi trả bảo hành thì phải cung cấp bằng chứng hợp lệ trong bao lâu? | Trong 02 ngày làm việc kể từ khi nhận yêu cầu hoàn tiền hoặc nhận sản phẩm từ đối tác vận chuyển. | `warranty-seller-dropship-tiki`, mục I |
+| 5 | Trong mô hình SD, Tiki xử lý và quyết định khiếu nại trong thời gian bao lâu? | Tiki kiểm tra, xác minh và đưa ra quyết định trong 02–07 ngày làm việc. | `warranty-seller-sd-tiki`, mục II |
 
-### Tổng hợp chất lượng truy xuất của nhóm
+Metadata filter tương ứng lần lượt là: `{"audience": "buyer"}`; `{"audience": "seller"}`; `{"audience": "seller", "fulfillment_model": "fbt"}`; `{"audience": "seller", "fulfillment_model": "dropship"}`; và `{"audience": "seller", "fulfillment_model": "sd"}`.
 
-> Cách chấm (theo `docs/SCORING.md`): **2 điểm/câu** — top-3 chứa chunk liên quan + agent trả lời đúng (2), có liên quan nhưng thiếu/không ở top-1 (1), không có trong top-3 (0).
+### So sánh ba chiến lược trên cùng query, model và filter
 
-| # | Câu hỏi | Chiến lược tốt nhất cho câu này | Có chunk liên quan trong top-3? | Ghi chú |
-|---|---------|-------------------------------|-------------------------------|---------|
-| 1 | Thời gian bảo hành người mua | Recursive | Có, khi dùng `audience=buyer` | Không filter: không có evidence 20–45 ngày trong top-3; có filter: evidence xuất hiện ở top-3. |
-| 2 | Thời hạn rút hàng FBT | Recursive / heading (đều top-1) | Có | Evidence 32 ngày làm việc nằm trong top-1. |
-| 3 | Bằng chứng Dropship | Chưa có chiến lược đạt | Không | Document đúng xuất hiện top-1 ở recursive/heading nhưng chunk không chứa mốc 02 ngày: failure case. |
-| 4 | Lưu video đóng gói | Heading/section-aware (top-1) | Có | Chunk giữ tiêu đề **Câu 11** và evidence 45 ngày. |
-| 5 | Phương án xử lý SD | Chưa có chiến lược đạt | Không | Top-3 chỉ chứa một phần danh sách; chưa đủ 4 phương án trong gold answer. |
+| # | Fixed 500/120 | Recursive 500 | Heading + recursive 500 |
+|---|---|---|---|
+| 1 | Gold ngoài top-3; Agent không đủ context; 0/2 | Gold top-3; Agent đúng; 1/2 | Gold ngoài top-3; Agent không đủ context; 0/2 |
+| 2 | Gold top-1; Agent đúng; 2/2 | Gold ngoài top-3; Agent không đủ context; 0/2 | Gold top-2; Agent đúng; 1/2 |
+| 3 | Gold top-3; Agent đúng; 1/2 | Gold top-1; Agent đúng; 2/2 | Gold top-1; Agent đúng; 2/2 |
+| 4 | Gold ngoài top-3; Agent không đủ context; 0/2 | Gold ngoài top-3; Agent không đủ context; 0/2 | Gold top-3; Agent đúng; 1/2 |
+| 5 | Gold ngoài top-3; Agent trả lời sai; 0/2 | Gold top-3; Agent đúng; 1/2 | Gold ngoài top-3; Agent trả lời sai; 0/2 |
+| **Tổng** | **3/10** | **4/10** | **4/10** |
 
-**Lọc bằng metadata có giúp ích không? Ở câu hỏi nào?**
-> Có, ở câu 1 với RecursiveChunker. Không filter, top-3 không có evidence “20 đến 45 ngày làm việc” dù corpus có nhiều quy định thời hạn cho seller; khi dùng `metadata_filter={"audience": "buyer"}`, evidence đúng xuất hiện trong top-3. Đây là ví dụ filter tránh nhầm chính sách theo đối tượng.
+Nếu chọn kết quả tốt nhất của từng chiến lược theo query thì tổng là 7/10: Q1 Recursive 1 điểm, Q2 Fixed 2 điểm, Q3 Recursive/Heading 2 điểm, Q4 Heading 1 điểm và Q5 Recursive 1 điểm.
 
----
+### Phân tích A/B metadata filtering
 
-## 4. Thuyết trình (Demo) & Bài học nhóm — Nhóm (5 điểm)
+Metadata filter có tác dụng rõ ở Q4 với Heading: trước filter, top-3 gồm hai chunk Dropship chưa đủ evidence và một chunk FAQ chung; sau filter `audience=seller, fulfillment_model=dropship`, gold chunk đi vào top-3 và Agent trả lời đúng. Q5 với Recursive cũng chỉ có gold chunk trong top-3 sau khi lọc đúng mô hình `sd`. Filter vẫn có rủi ro loại mất gold chunk nếu metadata sai hoặc điều kiện lọc quá hẹp.
 
-**Những phân tích (insights) hay nhất nhóm sẽ trình bày:**
-> 1. Recursive và heading/section-aware cùng đạt 2/5 evidence đúng trong top-3, cao hơn fixed size (1/5) trong lần chạy này.
-> 2. `audience=buyer` giúp câu hỏi thời hạn mơ hồ lấy được evidence chính sách người mua; không filter, evidence này không nằm trong top-3 của RecursiveChunker.
-> 3. Câu Dropship và SD là failure case: document đúng đứng top-1 nhưng chunk không có mốc “02 ngày làm việc” hoặc không chứa đủ 4 phương án SD, cho thấy relevance theo document không đủ để trả lời đúng.
+### Failure analysis
 
-**Bài học rút ra khi so sánh trong nhóm:**
-> Cùng một corpus nhưng chiến lược khác nhau tạo ra khác biệt rõ rệt về vị trí của evidence: fixed-size ổn định độ dài nhưng hay cắt phạm vi điều khoản; recursive tốt hơn cho câu thời hạn có filter; heading giữ được ngữ cảnh FAQ tốt cho câu video. Nhóm cần đánh giá chunk chứa đúng toàn bộ evidence, không chỉ nhìn doc_id ở top-1, vì câu Dropship và SD cho thấy hai điều này có thể khác nhau.
+- **Failure Q1:** Fixed và Heading ưu tiên các chunk cùng mục “Điều kiện bảo hành” nhưng không chứa đủ bốn evidence về giấy tờ; Recursive đưa gold vào top-3.
+- **Failure Q2:** Recursive ưu tiên nội dung Dropship và các đoạn FAQ gần nghĩa, làm Câu 4 rơi khỏi top-3.
+- **Failure Q4:** chỉ Heading giữ được gold chunk trong top-3; Fixed và Recursive xếp phần giới thiệu/quy định gần nghĩa lên trước.
+- **Failure Q5:** Fixed và Heading nhận đúng tài liệu SD nhưng không lấy chunk chứa mốc 02–07 ngày; Agent vì thế trả lời nhầm từ context khác.
+- **Cải tiến:** gắn tiêu đề con cụ thể vào từng subchunk, thử chunk size 300–400, bổ sung reranking theo keyword/mốc thời gian và giữ metadata filter theo `audience` + `fulfillment_model`.
 
-**Nếu làm lại, nhóm sẽ thay đổi gì trong chiến lược dữ liệu (data strategy)?**
-> Nhóm sẽ chia thêm các mục dài theo heading con, bold label hoặc danh sách bước để tách riêng evidence “02 ngày làm việc” của Dropship. Nhóm cũng sẽ lưu heading và số mục vào metadata từng chunk, đồng thời thử `fulfillment_model` filter cho các câu FBT/Dropship/SD để giảm nhiễu giữa các quy trình seller.
+## 4. Demo và bài học nhóm (5 điểm)
 
----
+### Kịch bản demo 6–8 phút
 
-## Tự Đánh Giá (Phần Nhóm)
+1. Giới thiệu corpus và metadata.
+2. So sánh ba chiến lược bằng số chunk và độ dài trung bình.
+3. Chạy `benchmark.py --strategy heading` với Q4 để thể hiện metadata filter đưa gold chunk Dropship vào top-3.
+4. Giải thích failure case Q1 và Q5.
+5. So sánh tổng điểm Fixed 3/10, Recursive 4/10 và Heading 4/10.
 
-| Tiêu chí | Điểm tự đánh giá |
-|----------|-------------------|
-| Lựa chọn tài liệu (Document Set Quality) | / 10 |
-| Thiết kế chiến lược (Strategy Design) | / 15 |
-| Chất lượng truy xuất (Retrieval Quality) | / 10 |
-| Thuyết trình (Demo) | / 5 |
-| **Tổng phần nhóm** | **/ 40** |
+### Insight chính
+
+- Metadata tốt có thể cứu retrieval bằng cách loại bỏ sai đối tượng và sai mô hình vận hành.
+- Chunk mạch lạc chưa đảm bảo retrieval tốt nếu embedding không biểu diễn ngữ nghĩa.
+- Benchmark phải giữ corpus, query, metadata filter, embedding model và LLM model cố định khi so sánh chunking.
+
+### Nếu làm lại
+
+Nhóm dùng MockEmbedder để kiểm thử contract và NVIDIA Nemotron để đánh giá retrieval thật. Metadata schema vẫn được giữ, nhưng filter có thể bổ sung `platform` khi query nêu rõ Shopee/Tiki; heading chunker sẽ gắn tiêu đề cụ thể hơn vào mọi subchunk sau khi section bị chia.
+
+## Tự đánh giá hiện tại
+
+| Tiêu chí | Điểm hiện tại |
+|---|---:|
+| Lựa chọn tài liệu | 10 / 10 |
+| Thiết kế chiến lược | 15 / 15 |
+| Kết quả retrieval tốt nhất ghép theo query | 7 / 10 |
+| Demo thực tế | Chưa tự đánh giá |
+| **Tổng trước demo** | **32 / 35** |

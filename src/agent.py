@@ -17,8 +17,21 @@ class KnowledgeBaseAgent:
         self._store = store
         self._llm_fn = llm_fn
 
-    def answer(self, question: str, top_k: int = 3) -> str:
-        results = self._store.search(question, top_k=top_k)
+    def answer(
+        self,
+        question: str,
+        top_k: int = 3,
+        metadata_filter: dict | None = None,
+    ) -> str:
+        results = (
+            self._store.search_with_filter(
+                question,
+                top_k=top_k,
+                metadata_filter=metadata_filter,
+            )
+            if metadata_filter
+            else self._store.search(question, top_k=top_k)
+        )
         if not results:
             return "I could not find relevant information in the knowledge base."
 

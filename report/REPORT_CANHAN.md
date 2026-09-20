@@ -64,7 +64,7 @@ Giải thích cách tiếp cận của bạn khi lập trình (implement) các p
 ### Tác tử KnowledgeBaseAgent
 
 **`answer`** — hướng tiếp cận:
-> Agent truy xuất top-k chunks, đánh số từng nguồn rồi ghép thành phần `Context` trong prompt. Prompt yêu cầu LLM chỉ dùng context, báo không tìm thấy nếu thiếu thông tin và trích số nguồn như `[1]`; sau đó `llm_fn` nhận prompt để sinh câu trả lời.
+> Agent truy xuất top-k chunks, dùng `search_with_filter` khi có metadata filter, đánh số từng nguồn rồi ghép thành phần `Context` trong prompt. Prompt yêu cầu LLM chỉ dùng context, báo không tìm thấy nếu thiếu thông tin và trích số nguồn như `[1]`; sau đó `llm_fn` nhận prompt để sinh câu trả lời.
 
 ---
 
@@ -75,10 +75,10 @@ Vượt qua bộ kiểm thử là điều kiện tính điểm phần này.
 ### Kết Quả Kiểm Thử (Test Results)
 
 ```
-============================== 51 passed in 0.04s ==============================
+55 passed
 ```
 
-**Số lượng bài test vượt qua (pass):** 51 / 51
+**Số lượng bài test vượt qua (pass):** 55 / 55
 
 ---
 
@@ -101,18 +101,22 @@ Vượt qua bộ kiểm thử là điều kiện tính điểm phần này.
 
 Chạy **5 câu hỏi đánh giá của nhóm** trên mã nguồn cá nhân của bạn trong gói `src`. **5 câu hỏi này phải trùng với các thành viên cùng nhóm** (xem `REPORT_NHOM.md`).
 
-| # | Câu hỏi (Query) | Top-1 Chunk truy xuất được (tóm tắt) | Điểm Score | Có liên quan không? (Relevant) | Câu trả lời của Agent (tóm tắt) |
-|---|-------|--------------------------------|-------|-----------|------------------------|
-| 1 | Thời gian bảo hành là bao lâu? | Chunk điều kiện bảo hành của Shopee, không chứa mốc 20–45 ngày. | 0.813 | Không đủ để trả lời | Chưa sinh bằng LLM; top-3 sau filter không có evidence 20–45 ngày. |
-| 2 | Trong mô hình FBT, nếu hàng lỗi không đủ điều kiện nhập kho, Nhà Bán có bao lâu để rút hàng? | FAQ chung Tiki về xử lý bảo hành, không chứa mốc FBT 32 ngày. | 0.900 | Không | Chưa sinh bằng LLM; evidence 32 ngày không nằm trong top-3. |
-| 3 | Theo mô hình Dropship, khi từ chối xử lý bảo hành, Nhà Bán phải cung cấp bằng chứng trong bao lâu? | FAQ chung Tiki có nội dung bằng chứng đóng gói nhưng không có điều kiện Dropship 02 ngày. | 0.723 | Không đủ để trả lời | Chưa sinh bằng LLM; evidence 02 ngày không nằm trong top-3. |
-| 4 | Nhà Bán cần lưu video đóng gói hàng hóa tối thiểu bao lâu? | FAQ chung Tiki về thời hạn bảo hành 30 ngày; evidence video 45 ngày ở top-3. | 0.827 | Có trong top-3 | Có thể trả lời 45 ngày từ context top-3; chưa gọi LLM thật. |
-| 5 | Theo mô hình SD, Tiki có thể xử lý những phương án nào sau khi có kết quả xác minh? | FAQ chung Tiki, không chứa đủ 4 phương án của mô hình SD. | 0.909 | Không | Chưa sinh bằng LLM; top-3 không có đầy đủ gold answer. |
+**Chiến lược cá nhân:** `RecursiveChunker(chunk_size=500)`; 34 chunk, độ dài trung bình 354,62 ký tự.
 
-**Bao nhiêu câu hỏi trả về chunk có liên quan trong top-3?** 1 / 5
+| # | Câu hỏi (Query) | Metadata filter | Nguồn gold | Top-1 chunk (tóm tắt) | Similarity | Gold chunk trong top-3? | Câu trả lời Agent | Embedding / LLM | Điểm |
+|---|---|---|---|---|---:|---|---|---|---:|
+| 1 | Người mua cần chuẩn bị giấy tờ gì để được bảo hành miễn phí trên Shopee? | `{"audience": "buyer"}` | `warranty-buyer-shopee`, “Điều kiện bảo hành” | Shopee: các trường hợp cần Trung tâm bảo hành thẩm định và các trường hợp không được bảo hành. | 0.901 | Có, top-3 | Cần hóa đơn điện tử hoặc mã đơn hàng; phiếu/tem bảo hành còn nguyên vẹn; serial/model khớp thông tin bảo hành. | `nvidia/nemotron-3-embed-1b` / `openai/gpt-oss-20b` | 1/2 |
+| 2 | Nhà Bán Tiki không xác nhận phương án xử lý trong 02 ngày làm việc thì sao? | `{"audience": "seller"}` | `warranty-seller-general-tiki`, Câu 4 | Dropship: trách nhiệm xử lý khi lỗi do Nhà Bán hoặc không do Nhà Bán. | 0.762 | Không | “I could not find an answer to that question in the provided context.” | `nvidia/nemotron-3-embed-1b` / `openai/gpt-oss-20b` | 0/2 |
+| 3 | Trong mô hình FBT, Nhà Bán phải rút hàng lỗi không đủ điều kiện nhập kho trong bao lâu? | `{"audience": "seller", "fulfillment_model": "fbt"}` | `warranty-seller-fbt-tiki`, Bước 1–2 | Quy trình FBT Bước 1–2: tiếp nhận, tạo mã khiếu nại, thu hồi và xử lý hàng không đủ điều kiện nhập kho. | 0.877 | Có, top-1 | Nhà Bán cần rút hàng trong **32 ngày làm việc** kể từ khi phiếu được tạo. `[1]` | `nvidia/nemotron-3-embed-1b` / `openai/gpt-oss-20b` | 2/2 |
+| 4 | Ở mô hình Dropship, nếu Nhà Bán từ chối xử lý đổi trả bảo hành thì phải cung cấp bằng chứng hợp lệ trong bao lâu? | `{"audience": "seller", "fulfillment_model": "dropship"}` | `warranty-seller-dropship-tiki`, mục I | Phần giới thiệu mô hình Dropship và phạm vi hướng dẫn. | 0.904 | Không | “I could not find that information in the provided context.” | `nvidia/nemotron-3-embed-1b` / `openai/gpt-oss-20b` | 0/2 |
+| 5 | Trong mô hình SD, Tiki xử lý và quyết định khiếu nại trong thời gian bao lâu? | `{"audience": "seller", "fulfillment_model": "sd"}` | `warranty-seller-sd-tiki`, mục II | Cam kết vận hành SD về thanh toán, đóng gói và bàn giao hàng. | 0.707 | Có, top-3 | Tiki xử lý và quyết định khiếu nại trong **02–07 ngày làm việc**. `[3]` | `nvidia/nemotron-3-embed-1b` / `openai/gpt-oss-20b` | 1/2 |
+
+**Bao nhiêu câu hỏi có gold chunk trong top-3?** 3 / 5
+
+**Tổng điểm benchmark:** 4 / 10.
 
 **Điều hay nhất tôi học được từ thành viên khác / nhóm khác (qua demo):**
-> Chunk theo heading/mục giúp giữ câu hỏi FAQ cùng nội dung trả lời, nên lấy đúng evidence video 45 ngày ở top-1. Metadata filter cũng quan trọng: với RecursiveChunker, filter `audience=buyer` đưa evidence 20–45 ngày vào top-3, trong khi không filter thì không có evidence này trong top-3.
+> Chunk theo heading/mục giữ điều khoản và tiêu đề nguồn đi cùng nhau; trong benchmark hiện tại, chiến lược này lấy được gold chunk Dropship ở top-3 trong khi Recursive không lấy được. Metadata filter cũng quan trọng: với Heading ở Q4 và Recursive ở Q5, filter đúng `fulfillment_model` đưa gold chunk vào top-3 sau khi kết quả không filter bị lẫn các quy trình gần nghĩa.
 
 ---
 
@@ -124,5 +128,5 @@ Chạy **5 câu hỏi đánh giá của nhóm** trên mã nguồn cá nhân củ
 | Hướng tiếp cận của tôi (My Approach) | 10 / 10 |
 | Hoàn thiện code (Core Implementation — tests) | 30 / 30 |
 | Dự đoán độ tương tự (Similarity Predictions) | 5 / 5 |
-| Kết quả truy xuất của tôi (Competition Results) | 2 / 10 |
-| **Tổng phần cá nhân** | **52 / 60** |
+| Kết quả truy xuất của tôi (Competition Results) | 4 / 10 |
+| **Tổng phần cá nhân** | **54 / 60** |

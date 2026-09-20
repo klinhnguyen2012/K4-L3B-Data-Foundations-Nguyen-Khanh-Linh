@@ -21,6 +21,7 @@ from .embeddings import (
     _mock_embed,
 )
 from .models import Document
+from .llm import NVIDIA_LLM_MODEL, NvidiaChatLLM
 from .store import EmbeddingStore
 
 __all__ = [
@@ -38,10 +39,12 @@ __all__ = [
     "OpenAIEmbedder",
     "GeminiEmbedder",
     "NvidiaEmbedder",
+    "NvidiaChatLLM",
     "_mock_embed",
     "LOCAL_EMBEDDING_MODEL",
     "OPENAI_EMBEDDING_MODEL",
     "GEMINI_EMBEDDING_MODEL",
     "NVIDIA_EMBEDDING_MODEL",
+    "NVIDIA_LLM_MODEL",
     "EMBEDDING_PROVIDER_ENV",
 ]
